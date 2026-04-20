@@ -36,5 +36,19 @@ app.post('/api/login', async (req, res) => {
     res.json({ token, name: result.rows[0].name });
 });
 
+app.post('/api/ingest', async (req, res) => {
+    const { device_id, temperature, humidity, timestamp, alert } = req.body;
+    try {
+        await pool.query(
+            `INSERT INTO raw_data (device_id, temperature, humidity, recorded_at, is_alert)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [device_id, temperature, humidity, timestamp, alert || false]
+        );
+        res.json({ status: 'ok' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: '數據儲存失敗' });
+    }
+});
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
